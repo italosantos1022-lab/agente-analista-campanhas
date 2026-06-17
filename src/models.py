@@ -1,7 +1,8 @@
 """Schemas pydantic do projeto.
 
-Por enquanto (Fase 1) só a linha de campanha. Os schemas de anomalia e de
-relatório entram nas fases 2–4.
+- Fase 1: `CampanhaRow` (linha limpa e validada).
+- Fase 2: `Anomalia` + enums `Severidade`/`TipoAnomalia` (saída da análise
+  determinística). O schema do relatório final entra na Fase 4.
 
 Conceito central da Fase 1: distinguir **vazio esperado** de **dado faltando**.
 Cada objetivo de campanha preenche um subconjunto diferente das colunas de
@@ -152,3 +153,105 @@ class CampanhaRow(BaseModel):
         self.campos_vazios_esperados = sorted(esperados)
         self.incompleto = bool(faltando)
         return self
+
+
+# =========================================================================== #
+# Fase 2 — Anomalias (saída da análise determinística)
+# =========================================================================== #
+class Severidade(str, Enum):
+    """Severidade atribuída por REGRA na camada determinística (não pelo LLM)."""
+
+    CRITICA = "crítica"
+    ALTA = "alta"
+    MEDIA = "média"
+
+
+class TipoAnomalia(str, Enum):
+    """Tipos de anomalia detectáveis (a régua aplicada depende do objetivo)."""
+
+    ROAS_EM_QUEDA = "roas_em_queda"
+    CUSTO_POR_COMPRA_ALTO = "custo_por_compra_alto"
+    CTR_EM_QUEDA = "ctr_em_queda"
+    FREQUENCIA_ALTA = "frequencia_alta"  # fadiga de criativo
+    CUSTO_POR_LEAD_ALTO = "custo_por_lead_alto"
+    VOLUME_LEADS_COLAPSO = "volume_leads_colapso"
+    CUSTO_POR_CONVERSA_ALTO = "custo_por_conversa_alto"
+    VOLUME_CONVERSAS_COLAPSO = "volume_conversas_colapso"
+    ALCANCE_COLAPSO = "alcance_colapso"
+    CPM_ALTO = "cpm_alto"
+
+
+class Anomalia(BaseModel):
+    """Uma anomalia detectada, com os números que a comprovam.
+
+    `descricao` é um texto FACTUAL gerado pelo código (o quê + números). O
+    diagnóstico em linguagem natural é responsabilidade do LLM na Fase 3 — aqui
+    nenhuma IA participa.
+    """
+
+    campanha_id: str
+    campanha_nome: str
+    objetivo: Objetivo
+    metrica: str  # métrica-base (ex.: "roas", "custo_por_compra", "alcance")
+    tipo: TipoAnomalia
+    descricao: str
+    severidade: Severidade
+    # Números que comprovam (primeiro/último dia, variação %, baseline, etc.).
+    evidencia: dict
+
+
+# =========================================================================== #
+# Fase 3 — Camada LLM (o LLM só escreve TEXTO; NUNCA números)
+# =========================================================================== #
+class AcaoRecomendada(str, Enum):
+    """Conjunto FECHADO de ações que o LLM pode recomendar.
+
+    Modelado como enum de propósito: qualquer ação fora desta lista faz a
+    validação pydantic falhar — o LLM não consegue "inventar" uma ação nova.
+    """
+
+    PAUSAR_CRIATIVO = "pausar_criativo"
+    RENOVAR_CRIATIVO = "renovar_criativo"
+    EXPANDIR_PUBLICO = "expandir_publico"
+    TROCAR_PUBLICO = "trocar_publico"
+    REVISAR_OFERTA = "revisar_oferta"
+    INVESTIGAR_FORMULARIO = "investigar_formulario"
+    INVESTIGAR_INTEGRACAO = "investigar_integracao"
+    REALOCAR_VERBA = "realocar_verba"
+
+
+class DiagnosticoAnomalia(BaseModel):
+    """Diagnóstico textual de UMA anomalia + ação recomendada (saída do LLM).
+
+    `ref` é o índice da anomalia na entrada (correlação determinística). Não há
+    campo numérico aqui: o LLM apenas escreve texto e escolhe uma ação.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    ref: int
+    campanha_id: str
+    metrica: str
+    diagnostico: str
+    acao: AcaoRecomendada
+    justificativa_acao: str
+
+
+class NarrativaCampanha(BaseModel):
+    """Narrativa que consolida as anomalias de UMA campanha (saída do LLM)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    campanha_id: str
+    narrativa: str
+
+
+class DiagnosticoLLM(BaseModel):
+    """Resposta completa esperada do LLM, validada por pydantic."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    resumo_executivo: str
+    narrativas: list[NarrativaCampanha]
+    diagnosticos: list[DiagnosticoAnomalia]
+

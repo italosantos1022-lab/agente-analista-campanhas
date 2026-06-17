@@ -19,6 +19,7 @@ Execução isolada (demo da fase):
 
 from __future__ import annotations
 
+import argparse
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -344,11 +345,23 @@ def ingerir(caminho: Path) -> IngestionResult:
 # Demo isolada da fase
 # --------------------------------------------------------------------------- #
 def _demo() -> None:
+    parser = argparse.ArgumentParser(
+        description="Ingestão e validação do CSV de campanhas (Fase 1)."
+    )
+    parser.add_argument(
+        "--csv",
+        type=Path,
+        default=None,
+        help="Sobrescreve o CSV de entrada (default: config/INPUT_CSV).",
+    )
+    args = parser.parse_args()
+
     settings = get_settings()
     setup_logging(settings.log_level)
+    caminho = args.csv or settings.input_csv
 
     try:
-        resultado = ingerir(settings.input_csv)
+        resultado = ingerir(caminho)
     except IngestionError as exc:
         log.error("Falha na ingestão: %s", exc)
         raise SystemExit(1) from exc

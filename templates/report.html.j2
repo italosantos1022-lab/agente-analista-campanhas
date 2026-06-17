@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de Análise de Campanhas</title>
+<style>
+  :root {
+    --tinta: #1f2937; --suave: #6b7280; --linha: #e5e7eb; --fundo: #f7f8fa;
+    --crit-bg: #fdecea; --crit-tt: #b42318; --crit-bd: #f1b0a8;
+    --alta-bg: #fef3e2; --alta-tt: #b6560a; --alta-bd: #f4ce9a;
+    --media-bg: #fff8e1; --media-tt: #8a6d00; --media-bd: #ecd98a;
+    --ok-bg: #e7f6ed; --ok-tt: #1e7e44; --ok-bd: #aedcc0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fundo); color: var(--tinta);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5; font-size: 15px;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 32px 20px 56px; }
+  header h1 { margin: 0 0 4px; font-size: 23px; }
+  header .sub { margin: 0; color: var(--suave); font-size: 13px; }
+  h2 {
+    font-size: 17px; margin: 32px 0 12px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--linha);
+  }
+  .aviso {
+    margin: 16px 0; padding: 12px 14px; border-radius: 8px;
+    background: var(--alta-bg); color: var(--alta-tt);
+    border: 1px solid var(--alta-bd); font-size: 14px;
+  }
+  .resumo p { margin: 0 0 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 12px; padding: 4px 10px; border-radius: 999px;
+    background: #eef0f3; color: var(--tinta); border: 1px solid var(--linha);
+  }
+  .chip.sev-critica { background: var(--crit-bg); color: var(--crit-tt); border-color: var(--crit-bd); }
+  .chip.sev-alta    { background: var(--alta-bg); color: var(--alta-tt); border-color: var(--alta-bd); }
+  .chip.sev-media   { background: var(--media-bg); color: var(--media-tt); border-color: var(--media-bd); }
+  .chip.ok          { background: var(--ok-bg); color: var(--ok-tt); border-color: var(--ok-bd); }
+  .card {
+    background: #fff; border: 1px solid var(--linha); border-radius: 10px;
+    padding: 18px 18px 8px; margin-bottom: 16px;
+  }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .card-head h3 { margin: 0; font-size: 16px; }
+  .obj { font-size: 12px; color: var(--suave); white-space: nowrap; }
+  .narrativa { margin: 8px 0 14px; color: #374151; }
+  .anomalia { border-left: 4px solid var(--linha); padding: 4px 0 4px 14px; margin: 0 0 14px; }
+  .anomalia.sev-critica { border-left-color: var(--crit-tt); }
+  .anomalia.sev-alta    { border-left-color: var(--alta-tt); }
+  .anomalia.sev-media   { border-left-color: var(--media-tt); }
+  .anomalia-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    padding: 2px 8px; border-radius: 6px;
+  }
+  .badge.sev-critica { background: var(--crit-bg); color: var(--crit-tt); border: 1px solid var(--crit-bd); }
+  .badge.sev-alta    { background: var(--alta-bg); color: var(--alta-tt); border: 1px solid var(--alta-bd); }
+  .badge.sev-media   { background: var(--media-bg); color: var(--media-tt); border: 1px solid var(--media-bd); }
+  .badge.ok          { background: var(--ok-bg); color: var(--ok-tt); border: 1px solid var(--ok-bd); }
+  .metrica { font-size: 15px; }
+  .tipo { font-size: 12px; color: var(--suave); }
+  .descricao { margin: 6px 0; }
+  .evidencia { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
+  .evidencia li {
+    display: flex; justify-content: space-between; gap: 12px; font-size: 13px;
+    border-bottom: 1px dashed var(--linha); padding-bottom: 3px;
+  }
+  .evidencia li span { color: var(--suave); }
+  .evidencia li b { font-variant-numeric: tabular-nums; }
+  .diag { margin: 8px 0 4px; }
+  .acao {
+    margin: 4px 0 8px; padding: 8px 10px; background: #f3f6fb;
+    border-radius: 6px; font-size: 14px;
+  }
+  ul.estaveis { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  ul.estaveis li {
+    display: flex; align-items: center; gap: 10px; background: #fff;
+    border: 1px solid var(--linha); border-radius: 8px; padding: 10px 12px;
+  }
+  .qualidade { background: #fff; border: 1px solid var(--linha); border-radius: 10px; padding: 16px 18px; }
+  .qualidade ul { margin: 8px 0 0; padding-left: 20px; }
+  .muted { color: var(--suave); }
+  footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--linha);
+           font-size: 12px; color: var(--suave); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Relatório de Análise de Campanhas</h1>
+    <p class="sub">
+      {% if periodo.inicio %}Período {{ periodo.inicio | data_br }} a {{ periodo.fim | data_br }}
+      · {{ janela_dias }} dias de janela · {% endif %}gerado em {{ gerado_em }}
+    </p>
+  </header>
+
+  {% if not llm_disponivel and aviso_llm %}
+  <div class="aviso">⚠️ {{ aviso_llm }}</div>
+  {% endif %}
+
+  <section class="resumo">
+    <h2>Resumo executivo</h2>
+    <p>{{ resumo_executivo }}</p>
+    <div class="chips">
+      <span class="chip">{{ totais.campanhas }} campanhas</span>
+      <span class="chip">{{ totais.anomalias }} anomalias</span>
+      <span class="chip sev-critica">{{ totais.por_severidade.get('crítica', 0) }} críticas</span>
+      <span class="chip sev-alta">{{ totais.por_severidade.get('alta', 0) }} altas</span>
+      <span class="chip sev-media">{{ totais.por_severidade.get('média', 0) }} médias</span>
+      <span class="chip ok">{{ totais.campanhas_estaveis }} estáveis</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Campanhas com anomalias</h2>
+    {% for camp in campanhas if camp.status == 'anomalias' %}
+    <div class="card">
+      <div class="card-head">
+        <h3>{{ camp.campanha_id }} — {{ camp.campanha_nome }}</h3>
+        <span class="obj">{{ camp.objetivo }}</span>
+      </div>
+      {% if camp.narrativa %}<p class="narrativa">{{ camp.narrativa }}</p>{% endif %}
+      {% for a in camp.anomalias %}
+      <div class="anomalia sev-{{ a.severidade | classe_sev }}">
+        <div class="anomalia-head">
+          <span class="badge sev-{{ a.severidade | classe_sev }}">{{ a.severidade }}</span>
+          <span class="metrica"><strong>{{ a.metrica | metrica_label }}</strong></span>
+          <span class="tipo">({{ a.tipo }})</span>
+        </div>
+        <p class="descricao">{{ a.descricao }}</p>
+        <ul class="evidencia">
+          {% for rotulo, valor in a.evidencia | evidencia_linhas %}
+          <li><span>{{ rotulo }}</span><b>{{ valor }}</b></li>
+          {% endfor %}
+        </ul>
+        {% if a.diagnostico %}<p class="diag"><strong>Diagnóstico:</strong> {{ a.diagnostico }}</p>{% endif %}
+        {% if a.acao_recomendada %}
+        <p class="acao"><strong>Ação recomendada:</strong> {{ a.acao_recomendada | acao_label }}{% if a.justificativa_acao %} — {{ a.justificativa_acao }}{% endif %}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Campanhas estáveis</h2>
+    <p class="muted">Sem anomalias na janela analisada — incluídas para o panorama completo.</p>
+    <ul class="estaveis">
+      {% for camp in campanhas if camp.status == 'estavel' %}
+      <li>
+        <span class="badge ok">estável</span>
+        <span><strong>{{ camp.campanha_id }}</strong> — {{ camp.campanha_nome }}</span>
+        <span class="obj">{{ camp.objetivo }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Qualidade do dado</h2>
+    <div class="qualidade">
+      <p>
+        Limpezas aplicadas na ingestão:
+        {{ qualidade_dado.limpezas.duplicatas_removidas }} duplicata(s) removida(s),
+        {{ qualidade_dado.limpezas.gasto_formato_br_corrigido }} gasto(s) em formato BR normalizado(s),
+        {{ qualidade_dado.limpezas.cliques_link_negativos_corrigidos }} clique(s) negativo(s) corrigido(s).
+      </p>
+      {% if qualidade_dado.linhas_incompletas %}
+      <p>Dias com dado incompleto — tratados como incompletos (não quebraram a análise nem geraram alarme falso):</p>
+      <ul>
+        {% for inc in qualidade_dado.linhas_incompletas %}
+        <li>{{ inc.campanha_id }} em {{ inc.data | data_br }}: faltando {{ inc.campos_faltando | join(', ') }}.</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted">Nenhum dia incompleto na janela.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <footer>
+    {% if llm_disponivel %}Diagnóstico textual gerado por {{ modelo_llm }}. {% endif %}
+    Todos os números são calculados pela camada determinística (Fases 1–2), nunca pelo LLM.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -28,6 +28,12 @@ def setup_logging(level: str = "INFO") -> None:
     root.setLevel(level.upper())
     root.addHandler(handler)
 
+    # Silencia libs HTTP: além de ruidosas, o httpx loga a URL completa — que no
+    # caso da Bot API do Telegram CONTÉM o token. Mantê-las em WARNING evita
+    # vazar segredo no log.
+    for ruidoso in ("httpx", "httpcore", "urllib3", "requests"):
+        logging.getLogger(ruidoso).setLevel(logging.WARNING)
+
 
 def get_logger(name: str) -> logging.Logger:
     """Atalho para `logging.getLogger`, mantendo o estilo do projeto."""

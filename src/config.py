@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     )
 
     # --- Caminhos ---
+    # Default ANCORADO na raiz do projeto (via __file__), não um caminho absoluto
+    # da máquina — portável em qualquer clone. Override por env `INPUT_CSV` ou
+    # pela flag `--csv` dos entrypoints.
     input_csv: Path = Field(
         default=PROJECT_ROOT / "data" / "dados-campanhas.csv",
         description="CSV de entrada com o relatório de Meta Ads.",

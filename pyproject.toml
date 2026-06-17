@@ -4,13 +4,18 @@ version = "0.1.0"
 description = "Agente que lê relatório de Meta Ads (CSV), detecta anomalias por objetivo, gera diagnóstico com LLM e notifica."
 requires-python = ">=3.11"
 dependencies = [
-    # Fase 0 + Fase 1: ingestão, limpeza, validação e config.
-    # Demais dependências (anthropic, tenacity, jinja2, httpx, resend)
-    # entram nas fases em que forem usadas, para não inflar o ambiente.
+    # Fases 0-1: ingestão, limpeza, validação e config.
     "pandas>=2.2",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
     "python-dotenv>=1.0",
+    # Fase 3: camada LLM (Claude) com retry/backoff.
+    "anthropic>=0.109.2",
+    "tenacity>=9.1.4",
+    # Fase 4: relatório HTML.
+    "jinja2>=3.1.6",
+    # Fase 5: notificação por email (Telegram usa httpx, já trazido pelo anthropic).
+    "resend>=2.31.0",
 ]
 
 [dependency-groups]
