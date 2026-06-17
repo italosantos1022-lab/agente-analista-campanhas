@@ -162,6 +162,10 @@ roda o pipeline de duas formas:
 
 Ao final, o relatório (`output/`) é publicado como **artefato** da execução.
 
+Um exemplo de relatório gerado com os dados fornecidos está em
+`docs/exemplo-relatorio.html`, com os JSON correspondentes
+(`exemplo-relatorio.json` e `exemplo-anomalias.json`) na mesma pasta.
+
 As credenciais vêm **exclusivamente de GitHub Secrets** (referenciadas como
 `${{ secrets.NOME }}`) — nenhuma chave é escrita no arquivo do workflow.
 
@@ -220,3 +224,13 @@ lado de cada uma está o que faria em produção.
 - **Uma única chamada ao LLM por execução.** Para muitos clientes simultâneos
   seria preciso agregar por cliente e paralelizar. A arquitetura já favorece isso
   (o LLM só vê resumos), mas a paralelização não está implementada.
+- **O email pode chegar sem as cores.** O corpo do email é o relatório HTML
+  completo, que usa variáveis CSS (`var(...)`) no tema. A maioria dos clientes
+  de email (Gmail, Outlook) não suporta variáveis CSS, então os badges de
+  severidade perdem a cor de fundo; o texto e a estrutura chegam intactos.
+  Aberto no navegador, o arquivo fica perfeito. Em produção, eu resolveria as
+  variáveis para cores literais (CSS inline) só na versão de email.
+- **A imagem Docker não foi buildada localmente.** O `Dockerfile` está escrito e
+  o `.dockerignore` barra os segredos, mas não rodei `docker build` na máquina
+  de desenvolvimento. O ambiente limpo foi provado por outro caminho: o GitHub
+  Actions reconstrói tudo do zero via `uv sync --frozen` a cada execução.

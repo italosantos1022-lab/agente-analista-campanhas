@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de Análise de Campanhas</title>
+<style>
+  :root {
+    --tinta: #1f2937; --suave: #6b7280; --linha: #e5e7eb; --fundo: #f7f8fa;
+    --crit-bg: #fdecea; --crit-tt: #b42318; --crit-bd: #f1b0a8;
+    --alta-bg: #fef3e2; --alta-tt: #b6560a; --alta-bd: #f4ce9a;
+    --media-bg: #fff8e1; --media-tt: #8a6d00; --media-bd: #ecd98a;
+    --ok-bg: #e7f6ed; --ok-tt: #1e7e44; --ok-bd: #aedcc0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fundo); color: var(--tinta);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5; font-size: 15px;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 32px 20px 56px; }
+  header h1 { margin: 0 0 4px; font-size: 23px; }
+  header .sub { margin: 0; color: var(--suave); font-size: 13px; }
+  h2 {
+    font-size: 17px; margin: 32px 0 12px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--linha);
+  }
+  .aviso {
+    margin: 16px 0; padding: 12px 14px; border-radius: 8px;
+    background: var(--alta-bg); color: var(--alta-tt);
+    border: 1px solid var(--alta-bd); font-size: 14px;
+  }
+  .resumo p { margin: 0 0 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 12px; padding: 4px 10px; border-radius: 999px;
+    background: #eef0f3; color: var(--tinta); border: 1px solid var(--linha);
+  }
+  .chip.sev-critica { background: var(--crit-bg); color: var(--crit-tt); border-color: var(--crit-bd); }
+  .chip.sev-alta    { background: var(--alta-bg); color: var(--alta-tt); border-color: var(--alta-bd); }
+  .chip.sev-media   { background: var(--media-bg); color: var(--media-tt); border-color: var(--media-bd); }
+  .chip.ok          { background: var(--ok-bg); color: var(--ok-tt); border-color: var(--ok-bd); }
+  .card {
+    background: #fff; border: 1px solid var(--linha); border-radius: 10px;
+    padding: 18px 18px 8px; margin-bottom: 16px;
+  }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .card-head h3 { margin: 0; font-size: 16px; }
+  .obj { font-size: 12px; color: var(--suave); white-space: nowrap; }
+  .narrativa { margin: 8px 0 14px; color: #374151; }
+  .anomalia { border-left: 4px solid var(--linha); padding: 4px 0 4px 14px; margin: 0 0 14px; }
+  .anomalia.sev-critica { border-left-color: var(--crit-tt); }
+  .anomalia.sev-alta    { border-left-color: var(--alta-tt); }
+  .anomalia.sev-media   { border-left-color: var(--media-tt); }
+  .anomalia-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    padding: 2px 8px; border-radius: 6px;
+  }
+  .badge.sev-critica { background: var(--crit-bg); color: var(--crit-tt); border: 1px solid var(--crit-bd); }
+  .badge.sev-alta    { background: var(--alta-bg); color: var(--alta-tt); border: 1px solid var(--alta-bd); }
+  .badge.sev-media   { background: var(--media-bg); color: var(--media-tt); border: 1px solid var(--media-bd); }
+  .badge.ok          { background: var(--ok-bg); color: var(--ok-tt); border: 1px solid var(--ok-bd); }
+  .metrica { font-size: 15px; }
+  .tipo { font-size: 12px; color: var(--suave); }
+  .descricao { margin: 6px 0; }
+  .evidencia { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
+  .evidencia li {
+    display: flex; justify-content: space-between; gap: 12px; font-size: 13px;
+    border-bottom: 1px dashed var(--linha); padding-bottom: 3px;
+  }
+  .evidencia li span { color: var(--suave); }
+  .evidencia li b { font-variant-numeric: tabular-nums; }
+  .diag { margin: 8px 0 4px; }
+  .acao {
+    margin: 4px 0 8px; padding: 8px 10px; background: #f3f6fb;
+    border-radius: 6px; font-size: 14px;
+  }
+  ul.estaveis { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  ul.estaveis li {
+    display: flex; align-items: center; gap: 10px; background: #fff;
+    border: 1px solid var(--linha); border-radius: 8px; padding: 10px 12px;
+  }
+  .qualidade { background: #fff; border: 1px solid var(--linha); border-radius: 10px; padding: 16px 18px; }
+  .qualidade ul { margin: 8px 0 0; padding-left: 20px; }
+  .muted { color: var(--suave); }
+  footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--linha);
+           font-size: 12px; color: var(--suave); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Relatório de Análise de Campanhas</h1>
+    <p class="sub">
+      Período 01/06/2026 a 07/06/2026
+      · 7 dias de janela · gerado em 17/06/2026 19:01
+    </p>
+  </header>
+
+  
+
+  <section class="resumo">
+    <h2>Resumo executivo</h2>
+    <p>Quatro campanhas apresentam anomalias críticas simultâneas, exigindo atenção imediata. A Remarketing Checkout está em colapso de retorno, com custo por compra muito acima do histórico e ROAS praticamente zerado, agravado por frequência elevada que indica saturação do público. A Captacao Leads B2B parou completamente de gerar leads, enquanto a Institucional Video sofre fadiga severa de criativo com alcance e engajamento em queda acentuada. A WhatsApp Conversas Vendas registra colapso no volume de conversas com custo por contato disparado.</p>
+    <div class="chips">
+      <span class="chip">6 campanhas</span>
+      <span class="chip">10 anomalias</span>
+      <span class="chip sev-critica">8 críticas</span>
+      <span class="chip sev-alta">2 altas</span>
+      <span class="chip sev-media">0 médias</span>
+      <span class="chip ok">2 estáveis</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Campanhas com anomalias</h2>
+    
+    <div class="card">
+      <div class="card-head">
+        <h3>CAMP-002 — Remarketing Checkout</h3>
+        <span class="obj">Vendas</span>
+      </div>
+      <p class="narrativa">Remarketing Checkout em colapso de eficiência: o ROAS despencou para níveis próximos de zero enquanto o custo por compra triplicou em relação ao histórico. A frequência elevada indica que o público de remarketing já está saturado com os criativos atuais, o que explica o esgotamento da resposta — a campanha está gastando muito para converter cada vez menos.</p>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>Custo por compra</strong></span>
+          <span class="tipo">(custo_por_compra_alto)</span>
+        </div>
+        <p class="descricao">Custo por compra do último dia (268,57) está 210,3% acima do baseline da campanha (86,54).</p>
+        <ul class="evidencia">
+          
+          <li><span>Último dia</span><b>07/06/2026: 268,57</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>86,54</b></li>
+          
+          <li><span>Desvio vs baseline</span><b>+210,3%</b></li>
+          
+          <li><span>Dias considerados</span><b>7</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O custo para gerar cada compra está muito acima do padrão histórico da campanha, indicando que o público de remarketing está respondendo mal aos anúncios atuais e que a eficiência de conversão colapsou.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Renovar criativo — Com a frequência elevada e o custo por compra disparado, os criativos atuais estão esgotados para esse público. Renovar o criativo é o primeiro passo para restaurar a relevância e reduzir o custo de conversão.</p>
+        
+      </div>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>ROAS</strong></span>
+          <span class="tipo">(roas_em_queda)</span>
+        </div>
+        <p class="descricao">ROAS caiu 95,9% no período (18,12 -&gt; 0,74).</p>
+        <ul class="evidencia">
+          
+          <li><span>Primeiro dia</span><b>01/06/2026: 18,12</b></li>
+          
+          <li><span>Último dia</span><b>07/06/2026: 0,74</b></li>
+          
+          <li><span>Variação no período</span><b>-95,9%</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>7,14</b></li>
+          
+          <li><span>Dias considerados</span><b>7</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O retorno sobre o investimento em anúncios caiu para um nível próximo de zero, tornando a campanha economicamente inviável no estado atual. A queda é severa e indica que as compras geradas são insuficientes para justificar o gasto.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Revisar oferta — Com o ROAS praticamente zerado, além da fadiga de criativo, é necessário avaliar se a oferta apresentada no anúncio ainda é competitiva e relevante para o público de checkout abandonado, pois uma oferta inadequada pode estar bloqueando a conversão mesmo com criativos renovados.</p>
+        
+      </div>
+      
+      <div class="anomalia sev-alta">
+        <div class="anomalia-head">
+          <span class="badge sev-alta">alta</span>
+          <span class="metrica"><strong>Frequência</strong></span>
+          <span class="tipo">(frequencia_alta)</span>
+        </div>
+        <p class="descricao">Frequência atingiu 4,8 no último dia (fadiga de criativo; era 3,1 no início).</p>
+        <ul class="evidencia">
+          
+          <li><span>Primeiro dia</span><b>01/06/2026: 3,10</b></li>
+          
+          <li><span>Último dia</span><b>07/06/2026: 4,80</b></li>
+          
+          <li><span>Variação no período</span><b>+54,8%</b></li>
+          
+          <li><span>Limiar crítico</span><b>5,00</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> A frequência da campanha de remarketing está em nível elevado e crescente, confirmando que o público está sendo sobreexposto aos mesmos criativos. Esse esgotamento é um fator direto na queda de conversões e no aumento do custo por compra.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Renovar criativo — Frequência alta em remarketing acelera a fadiga e reduz a taxa de resposta do público. Renovar o criativo é a ação mais eficaz para recuperar a atenção de quem já demonstrou interesse mas está sendo impactado repetidamente pelo mesmo anúncio.</p>
+        
+      </div>
+      
+    </div>
+    
+    <div class="card">
+      <div class="card-head">
+        <h3>CAMP-003 — Captacao Leads B2B</h3>
+        <span class="obj">Leads</span>
+      </div>
+      <p class="narrativa">Captacao Leads B2B em parada total: o volume de leads zerou completamente no período, e o custo por lead registrado antes do colapso já estava muito acima do baseline. O cenário sugere uma ruptura técnica ou estrutural — seja no formulário, na integração ou na entrega — que precisa ser investigada antes de qualquer ajuste de mídia.</p>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>Volume de leads</strong></span>
+          <span class="tipo">(volume_leads_colapso)</span>
+        </div>
+        <p class="descricao">Volume de leads despencou a zero no período (9 -&gt; 0).</p>
+        <ul class="evidencia">
+          
+          <li><span>Primeiro dia</span><b>01/06/2026: 9</b></li>
+          
+          <li><span>Último dia</span><b>07/06/2026: 0</b></li>
+          
+          <li><span>Variação no período</span><b>-100,0%</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>2,71</b></li>
+          
+          <li><span>Dias considerados</span><b>7</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O volume de leads caiu a zero, o que representa uma parada total na geração de resultados. Uma queda tão abrupta raramente é causada apenas por desempenho de mídia — aponta para uma falha técnica no formulário ou na integração de captura.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Investigar formulário — Colapso total de volume em campanha de leads é o sinal mais claro de quebra técnica. Verificar o formulário é a ação prioritária antes de qualquer ajuste de segmentação ou criativo, pois sem o formulário funcionando nenhuma otimização de mídia terá efeito.</p>
+        
+      </div>
+      
+      <div class="anomalia sev-alta">
+        <div class="anomalia-head">
+          <span class="badge sev-alta">alta</span>
+          <span class="metrica"><strong>Custo por lead</strong></span>
+          <span class="tipo">(custo_por_lead_alto)</span>
+        </div>
+        <p class="descricao">Custo por lead do último dia (214,25) está 104,2% acima do baseline da campanha (104,93).</p>
+        <ul class="evidencia">
+          
+          <li><span>Último dia</span><b>03/06/2026: 214,25</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>104,93</b></li>
+          
+          <li><span>Desvio vs baseline</span><b>+104,2%</b></li>
+          
+          <li><span>Dias considerados</span><b>3</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O custo por lead registrado antes do colapso total já estava muito acima do histórico da campanha, indicando que a eficiência estava se deteriorando antes da parada completa. Isso sugere que o problema não é apenas técnico, mas também de qualidade da entrega.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Investigar integração — Com o volume zerado e o custo por lead já elevado antes do colapso, é necessário verificar se a integração entre o formulário e o CRM ou sistema de destino está funcionando corretamente, pois leads podem estar sendo perdidos no processo de transmissão mesmo quando o formulário aparenta funcionar.</p>
+        
+      </div>
+      
+    </div>
+    
+    <div class="card">
+      <div class="card-head">
+        <h3>CAMP-005 — Institucional Video</h3>
+        <span class="obj">Reconhecimento</span>
+      </div>
+      <p class="narrativa">Institucional Video em fadiga crítica de criativo: a frequência atingiu nível elevado, o alcance caiu expressivamente e o CTR de link despencou para uma fração do valor inicial. O público está sendo impactado repetidamente pelo mesmo conteúdo e deixou de reagir — a campanha perdeu capacidade de gerar atenção e cliques.</p>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>Alcance</strong></span>
+          <span class="tipo">(alcance_colapso)</span>
+        </div>
+        <p class="descricao">Alcance caiu 63,6% no período (54.444 -&gt; 19.808).</p>
+        <ul class="evidencia">
+          
+          <li><span>Primeiro dia</span><b>01/06/2026: 54.444</b></li>
+          
+          <li><span>Último dia</span><b>07/06/2026: 19.808</b></li>
+          
+          <li><span>Variação no período</span><b>-63,6%</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>36.960,14</b></li>
+          
+          <li><span>Dias considerados</span><b>7</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O alcance da campanha caiu de forma expressiva no período, reduzindo drasticamente o número de pessoas impactadas. Combinado com a frequência elevada, isso indica que o algoritmo está circulando o anúncio repetidamente para um grupo pequeno em vez de expandir a entrega.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Expandir público — A combinação de alcance em queda e frequência alta é sintoma clássico de esgotamento do público-alvo definido. Expandir o público permite que a campanha alcance novas pessoas e reduza a saturação do segmento atual.</p>
+        
+      </div>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>CTR de link</strong></span>
+          <span class="tipo">(ctr_em_queda)</span>
+        </div>
+        <p class="descricao">CTR de link caiu 86,4% no período (1,1 -&gt; 0,15).</p>
+        <ul class="evidencia">
+          
+          <li><span>Primeiro dia</span><b>01/06/2026: 1,10</b></li>
+          
+          <li><span>Último dia</span><b>07/06/2026: 0,15</b></li>
+          
+          <li><span>Variação no período</span><b>-86,4%</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>0,62</b></li>
+          
+          <li><span>Dias considerados</span><b>7</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O CTR de link despencou para uma fração mínima do valor inicial, indicando que o público está ignorando os anúncios. A queda é consistente com a fadiga de criativo evidenciada pela frequência elevada.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Pausar criativo — Com CTR em queda tão acentuada e frequência alta, o criativo atual perdeu completamente a capacidade de gerar cliques. Pausá-lo interrompe o desperdício de verba e abre espaço para a entrada de um novo criativo.</p>
+        
+      </div>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>Frequência</strong></span>
+          <span class="tipo">(frequencia_alta)</span>
+        </div>
+        <p class="descricao">Frequência atingiu 5,2 no último dia (fadiga de criativo; era 1,8 no início).</p>
+        <ul class="evidencia">
+          
+          <li><span>Primeiro dia</span><b>01/06/2026: 1,80</b></li>
+          
+          <li><span>Último dia</span><b>07/06/2026: 5,20</b></li>
+          
+          <li><span>Variação no período</span><b>+188,9%</b></li>
+          
+          <li><span>Limiar crítico</span><b>5,00</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> A frequência atingiu um nível elevado, muito acima do ponto de partida da campanha, confirmando que o mesmo público está sendo impactado repetidamente pelo mesmo vídeo. Esse nível de repetição gera fadiga e explica a queda simultânea de alcance e CTR.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Renovar criativo — Frequência elevada com queda de engajamento é o diagnóstico clássico de fadiga de criativo. Renovar o vídeo é a ação estrutural que resolve a causa raiz do problema, permitindo que a campanha volte a gerar atenção genuína.</p>
+        
+      </div>
+      
+    </div>
+    
+    <div class="card">
+      <div class="card-head">
+        <h3>CAMP-006 — WhatsApp Conversas Vendas</h3>
+        <span class="obj">Mensagens</span>
+      </div>
+      <p class="narrativa">WhatsApp Conversas Vendas em deterioração acelerada: o volume de conversas iniciadas caiu de forma drástica enquanto o custo por conversa mais que dobrou em relação ao histórico. A campanha está entregando muito menos resultado a um custo muito maior, sinalizando que o público ou o criativo perderam relevância para acionar a ação de mensagem.</p>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>Volume de conversas</strong></span>
+          <span class="tipo">(volume_conversas_colapso)</span>
+        </div>
+        <p class="descricao">Volume de conversas caiu 82,7% no período (52 -&gt; 9).</p>
+        <ul class="evidencia">
+          
+          <li><span>Primeiro dia</span><b>01/06/2026: 52</b></li>
+          
+          <li><span>Último dia</span><b>07/06/2026: 9</b></li>
+          
+          <li><span>Variação no período</span><b>-82,7%</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>30,14</b></li>
+          
+          <li><span>Dias considerados</span><b>7</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O volume de conversas iniciadas via WhatsApp caiu de forma drástica, indicando que os anúncios deixaram de motivar o público a iniciar contato. A queda é acentuada o suficiente para sugerir perda de relevância do criativo ou do público impactado.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Trocar público — Com o volume de conversas colapsado e o custo por contato disparado, o público atual demonstra baixa propensão a iniciar mensagens. Trocar o público pode reativar a demanda ao direcionar os anúncios para segmentos com maior intenção de contato.</p>
+        
+      </div>
+      
+      <div class="anomalia sev-critica">
+        <div class="anomalia-head">
+          <span class="badge sev-critica">crítica</span>
+          <span class="metrica"><strong>Custo por conversa</strong></span>
+          <span class="tipo">(custo_por_conversa_alto)</span>
+        </div>
+        <p class="descricao">Custo por conversa do último dia (44,59) está 120,6% acima do baseline da campanha (20,21).</p>
+        <ul class="evidencia">
+          
+          <li><span>Último dia</span><b>07/06/2026: 44,59</b></li>
+          
+          <li><span>Baseline (média da campanha)</span><b>20,21</b></li>
+          
+          <li><span>Desvio vs baseline</span><b>+120,6%</b></li>
+          
+          <li><span>Dias considerados</span><b>7</b></li>
+          
+        </ul>
+        <p class="diag"><strong>Diagnóstico:</strong> O custo para iniciar cada conversa mais que dobrou em relação ao histórico da campanha, tornando a aquisição de contatos via WhatsApp muito mais cara e ineficiente. Isso reflete diretamente o colapso no volume de conversas.</p>
+        
+        <p class="acao"><strong>Ação recomendada:</strong> Revisar oferta — Quando o custo por ação sobe acentuadamente em campanhas de mensagens, frequentemente a oferta ou o gancho do anúncio perdeu atratividade. Revisar a proposta de valor apresentada pode reestimular o interesse do público em iniciar a conversa.</p>
+        
+      </div>
+      
+    </div>
+    
+  </section>
+
+  <section>
+    <h2>Campanhas estáveis</h2>
+    <p class="muted">Sem anomalias na janela analisada — incluídas para o panorama completo.</p>
+    <ul class="estaveis">
+      
+      <li>
+        <span class="badge ok">estável</span>
+        <span><strong>CAMP-001</strong> — Lancamento Curso Trafego</span>
+        <span class="obj">Vendas</span>
+      </li>
+      
+      <li>
+        <span class="badge ok">estável</span>
+        <span><strong>CAMP-004</strong> — Black Friday Antecipada</span>
+        <span class="obj">Vendas</span>
+      </li>
+      
+    </ul>
+  </section>
+
+  <section>
+    <h2>Qualidade do dado</h2>
+    <div class="qualidade">
+      <p>
+        Limpezas aplicadas na ingestão:
+        1 duplicata(s) removida(s),
+        1 gasto(s) em formato BR normalizado(s),
+        1 clique(s) negativo(s) corrigido(s).
+      </p>
+      
+      <p>Dias com dado incompleto — tratados como incompletos (não quebraram a análise nem geraram alarme falso):</p>
+      <ul>
+        
+        <li>CAMP-004 em 03/06/2026: faltando compras, custo_por_compra, roas, valor_compras.</li>
+        
+      </ul>
+      
+    </div>
+  </section>
+
+  <footer>
+    Diagnóstico textual gerado por claude-sonnet-4-6. 
+    Todos os números são calculados pela camada determinística (Fases 1–2), nunca pelo LLM.
+  </footer>
+
+</div>
+</body>
+</html>

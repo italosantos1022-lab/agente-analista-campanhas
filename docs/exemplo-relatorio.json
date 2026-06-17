@@ -1,0 +1,302 @@
+{
+  "gerado_em": "17/06/2026 19:01",
+  "periodo": {
+    "inicio": "2026-06-01",
+    "fim": "2026-06-07"
+  },
+  "janela_dias": 7,
+  "llm_disponivel": true,
+  "aviso_llm": null,
+  "modelo_llm": "claude-sonnet-4-6",
+  "resumo_executivo": "Quatro campanhas apresentam anomalias críticas simultâneas, exigindo atenção imediata. A Remarketing Checkout está em colapso de retorno, com custo por compra muito acima do histórico e ROAS praticamente zerado, agravado por frequência elevada que indica saturação do público. A Captacao Leads B2B parou completamente de gerar leads, enquanto a Institucional Video sofre fadiga severa de criativo com alcance e engajamento em queda acentuada. A WhatsApp Conversas Vendas registra colapso no volume de conversas com custo por contato disparado.",
+  "totais": {
+    "campanhas": 6,
+    "anomalias": 10,
+    "por_severidade": {
+      "crítica": 8,
+      "alta": 2,
+      "média": 0
+    },
+    "campanhas_com_anomalia": 4,
+    "campanhas_estaveis": 2
+  },
+  "campanhas": [
+    {
+      "campanha_id": "CAMP-002",
+      "campanha_nome": "Remarketing Checkout",
+      "objetivo": "Vendas",
+      "status": "anomalias",
+      "narrativa": "Remarketing Checkout em colapso de eficiência: o ROAS despencou para níveis próximos de zero enquanto o custo por compra triplicou em relação ao histórico. A frequência elevada indica que o público de remarketing já está saturado com os criativos atuais, o que explica o esgotamento da resposta — a campanha está gastando muito para converter cada vez menos.",
+      "anomalias": [
+        {
+          "metrica": "custo_por_compra",
+          "tipo": "custo_por_compra_alto",
+          "severidade": "crítica",
+          "descricao": "Custo por compra do último dia (268,57) está 210,3% acima do baseline da campanha (86,54).",
+          "evidencia": {
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 268.57
+            },
+            "baseline_media": 86.54,
+            "desvio_pct": 210.3,
+            "janela_dias": 7
+          },
+          "diagnostico": "O custo para gerar cada compra está muito acima do padrão histórico da campanha, indicando que o público de remarketing está respondendo mal aos anúncios atuais e que a eficiência de conversão colapsou.",
+          "acao_recomendada": "renovar_criativo",
+          "justificativa_acao": "Com a frequência elevada e o custo por compra disparado, os criativos atuais estão esgotados para esse público. Renovar o criativo é o primeiro passo para restaurar a relevância e reduzir o custo de conversão."
+        },
+        {
+          "metrica": "roas",
+          "tipo": "roas_em_queda",
+          "severidade": "crítica",
+          "descricao": "ROAS caiu 95,9% no período (18,12 -> 0,74).",
+          "evidencia": {
+            "primeiro_dia": {
+              "data": "2026-06-01",
+              "valor": 18.12
+            },
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 0.74
+            },
+            "variacao_pct": -95.9,
+            "baseline_media": 7.14,
+            "janela_dias": 7
+          },
+          "diagnostico": "O retorno sobre o investimento em anúncios caiu para um nível próximo de zero, tornando a campanha economicamente inviável no estado atual. A queda é severa e indica que as compras geradas são insuficientes para justificar o gasto.",
+          "acao_recomendada": "revisar_oferta",
+          "justificativa_acao": "Com o ROAS praticamente zerado, além da fadiga de criativo, é necessário avaliar se a oferta apresentada no anúncio ainda é competitiva e relevante para o público de checkout abandonado, pois uma oferta inadequada pode estar bloqueando a conversão mesmo com criativos renovados."
+        },
+        {
+          "metrica": "frequencia",
+          "tipo": "frequencia_alta",
+          "severidade": "alta",
+          "descricao": "Frequência atingiu 4,8 no último dia (fadiga de criativo; era 3,1 no início).",
+          "evidencia": {
+            "primeiro_dia": {
+              "data": "2026-06-01",
+              "valor": 3.1
+            },
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 4.8
+            },
+            "variacao_pct": 54.8,
+            "limiar_critico": 5.0
+          },
+          "diagnostico": "A frequência da campanha de remarketing está em nível elevado e crescente, confirmando que o público está sendo sobreexposto aos mesmos criativos. Esse esgotamento é um fator direto na queda de conversões e no aumento do custo por compra.",
+          "acao_recomendada": "renovar_criativo",
+          "justificativa_acao": "Frequência alta em remarketing acelera a fadiga e reduz a taxa de resposta do público. Renovar o criativo é a ação mais eficaz para recuperar a atenção de quem já demonstrou interesse mas está sendo impactado repetidamente pelo mesmo anúncio."
+        }
+      ]
+    },
+    {
+      "campanha_id": "CAMP-003",
+      "campanha_nome": "Captacao Leads B2B",
+      "objetivo": "Leads",
+      "status": "anomalias",
+      "narrativa": "Captacao Leads B2B em parada total: o volume de leads zerou completamente no período, e o custo por lead registrado antes do colapso já estava muito acima do baseline. O cenário sugere uma ruptura técnica ou estrutural — seja no formulário, na integração ou na entrega — que precisa ser investigada antes de qualquer ajuste de mídia.",
+      "anomalias": [
+        {
+          "metrica": "leads",
+          "tipo": "volume_leads_colapso",
+          "severidade": "crítica",
+          "descricao": "Volume de leads despencou a zero no período (9 -> 0).",
+          "evidencia": {
+            "primeiro_dia": {
+              "data": "2026-06-01",
+              "valor": 9
+            },
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 0
+            },
+            "variacao_pct": -100.0,
+            "baseline_media": 2.71,
+            "janela_dias": 7
+          },
+          "diagnostico": "O volume de leads caiu a zero, o que representa uma parada total na geração de resultados. Uma queda tão abrupta raramente é causada apenas por desempenho de mídia — aponta para uma falha técnica no formulário ou na integração de captura.",
+          "acao_recomendada": "investigar_formulario",
+          "justificativa_acao": "Colapso total de volume em campanha de leads é o sinal mais claro de quebra técnica. Verificar o formulário é a ação prioritária antes de qualquer ajuste de segmentação ou criativo, pois sem o formulário funcionando nenhuma otimização de mídia terá efeito."
+        },
+        {
+          "metrica": "custo_por_lead",
+          "tipo": "custo_por_lead_alto",
+          "severidade": "alta",
+          "descricao": "Custo por lead do último dia (214,25) está 104,2% acima do baseline da campanha (104,93).",
+          "evidencia": {
+            "ultimo_dia": {
+              "data": "2026-06-03",
+              "valor": 214.25
+            },
+            "baseline_media": 104.93,
+            "desvio_pct": 104.2,
+            "janela_dias": 3
+          },
+          "diagnostico": "O custo por lead registrado antes do colapso total já estava muito acima do histórico da campanha, indicando que a eficiência estava se deteriorando antes da parada completa. Isso sugere que o problema não é apenas técnico, mas também de qualidade da entrega.",
+          "acao_recomendada": "investigar_integracao",
+          "justificativa_acao": "Com o volume zerado e o custo por lead já elevado antes do colapso, é necessário verificar se a integração entre o formulário e o CRM ou sistema de destino está funcionando corretamente, pois leads podem estar sendo perdidos no processo de transmissão mesmo quando o formulário aparenta funcionar."
+        }
+      ]
+    },
+    {
+      "campanha_id": "CAMP-005",
+      "campanha_nome": "Institucional Video",
+      "objetivo": "Reconhecimento",
+      "status": "anomalias",
+      "narrativa": "Institucional Video em fadiga crítica de criativo: a frequência atingiu nível elevado, o alcance caiu expressivamente e o CTR de link despencou para uma fração do valor inicial. O público está sendo impactado repetidamente pelo mesmo conteúdo e deixou de reagir — a campanha perdeu capacidade de gerar atenção e cliques.",
+      "anomalias": [
+        {
+          "metrica": "alcance",
+          "tipo": "alcance_colapso",
+          "severidade": "crítica",
+          "descricao": "Alcance caiu 63,6% no período (54.444 -> 19.808).",
+          "evidencia": {
+            "primeiro_dia": {
+              "data": "2026-06-01",
+              "valor": 54444
+            },
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 19808
+            },
+            "variacao_pct": -63.6,
+            "baseline_media": 36960.14,
+            "janela_dias": 7
+          },
+          "diagnostico": "O alcance da campanha caiu de forma expressiva no período, reduzindo drasticamente o número de pessoas impactadas. Combinado com a frequência elevada, isso indica que o algoritmo está circulando o anúncio repetidamente para um grupo pequeno em vez de expandir a entrega.",
+          "acao_recomendada": "expandir_publico",
+          "justificativa_acao": "A combinação de alcance em queda e frequência alta é sintoma clássico de esgotamento do público-alvo definido. Expandir o público permite que a campanha alcance novas pessoas e reduza a saturação do segmento atual."
+        },
+        {
+          "metrica": "ctr_link",
+          "tipo": "ctr_em_queda",
+          "severidade": "crítica",
+          "descricao": "CTR de link caiu 86,4% no período (1,1 -> 0,15).",
+          "evidencia": {
+            "primeiro_dia": {
+              "data": "2026-06-01",
+              "valor": 1.1
+            },
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 0.15
+            },
+            "variacao_pct": -86.4,
+            "baseline_media": 0.62,
+            "janela_dias": 7
+          },
+          "diagnostico": "O CTR de link despencou para uma fração mínima do valor inicial, indicando que o público está ignorando os anúncios. A queda é consistente com a fadiga de criativo evidenciada pela frequência elevada.",
+          "acao_recomendada": "pausar_criativo",
+          "justificativa_acao": "Com CTR em queda tão acentuada e frequência alta, o criativo atual perdeu completamente a capacidade de gerar cliques. Pausá-lo interrompe o desperdício de verba e abre espaço para a entrada de um novo criativo."
+        },
+        {
+          "metrica": "frequencia",
+          "tipo": "frequencia_alta",
+          "severidade": "crítica",
+          "descricao": "Frequência atingiu 5,2 no último dia (fadiga de criativo; era 1,8 no início).",
+          "evidencia": {
+            "primeiro_dia": {
+              "data": "2026-06-01",
+              "valor": 1.8
+            },
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 5.2
+            },
+            "variacao_pct": 188.9,
+            "limiar_critico": 5.0
+          },
+          "diagnostico": "A frequência atingiu um nível elevado, muito acima do ponto de partida da campanha, confirmando que o mesmo público está sendo impactado repetidamente pelo mesmo vídeo. Esse nível de repetição gera fadiga e explica a queda simultânea de alcance e CTR.",
+          "acao_recomendada": "renovar_criativo",
+          "justificativa_acao": "Frequência elevada com queda de engajamento é o diagnóstico clássico de fadiga de criativo. Renovar o vídeo é a ação estrutural que resolve a causa raiz do problema, permitindo que a campanha volte a gerar atenção genuína."
+        }
+      ]
+    },
+    {
+      "campanha_id": "CAMP-006",
+      "campanha_nome": "WhatsApp Conversas Vendas",
+      "objetivo": "Mensagens",
+      "status": "anomalias",
+      "narrativa": "WhatsApp Conversas Vendas em deterioração acelerada: o volume de conversas iniciadas caiu de forma drástica enquanto o custo por conversa mais que dobrou em relação ao histórico. A campanha está entregando muito menos resultado a um custo muito maior, sinalizando que o público ou o criativo perderam relevância para acionar a ação de mensagem.",
+      "anomalias": [
+        {
+          "metrica": "conversas_iniciadas",
+          "tipo": "volume_conversas_colapso",
+          "severidade": "crítica",
+          "descricao": "Volume de conversas caiu 82,7% no período (52 -> 9).",
+          "evidencia": {
+            "primeiro_dia": {
+              "data": "2026-06-01",
+              "valor": 52
+            },
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 9
+            },
+            "variacao_pct": -82.7,
+            "baseline_media": 30.14,
+            "janela_dias": 7
+          },
+          "diagnostico": "O volume de conversas iniciadas via WhatsApp caiu de forma drástica, indicando que os anúncios deixaram de motivar o público a iniciar contato. A queda é acentuada o suficiente para sugerir perda de relevância do criativo ou do público impactado.",
+          "acao_recomendada": "trocar_publico",
+          "justificativa_acao": "Com o volume de conversas colapsado e o custo por contato disparado, o público atual demonstra baixa propensão a iniciar mensagens. Trocar o público pode reativar a demanda ao direcionar os anúncios para segmentos com maior intenção de contato."
+        },
+        {
+          "metrica": "custo_por_conversa",
+          "tipo": "custo_por_conversa_alto",
+          "severidade": "crítica",
+          "descricao": "Custo por conversa do último dia (44,59) está 120,6% acima do baseline da campanha (20,21).",
+          "evidencia": {
+            "ultimo_dia": {
+              "data": "2026-06-07",
+              "valor": 44.59
+            },
+            "baseline_media": 20.21,
+            "desvio_pct": 120.6,
+            "janela_dias": 7
+          },
+          "diagnostico": "O custo para iniciar cada conversa mais que dobrou em relação ao histórico da campanha, tornando a aquisição de contatos via WhatsApp muito mais cara e ineficiente. Isso reflete diretamente o colapso no volume de conversas.",
+          "acao_recomendada": "revisar_oferta",
+          "justificativa_acao": "Quando o custo por ação sobe acentuadamente em campanhas de mensagens, frequentemente a oferta ou o gancho do anúncio perdeu atratividade. Revisar a proposta de valor apresentada pode reestimular o interesse do público em iniciar a conversa."
+        }
+      ]
+    },
+    {
+      "campanha_id": "CAMP-001",
+      "campanha_nome": "Lancamento Curso Trafego",
+      "objetivo": "Vendas",
+      "status": "estavel",
+      "narrativa": null,
+      "anomalias": []
+    },
+    {
+      "campanha_id": "CAMP-004",
+      "campanha_nome": "Black Friday Antecipada",
+      "objetivo": "Vendas",
+      "status": "estavel",
+      "narrativa": null,
+      "anomalias": []
+    }
+  ],
+  "qualidade_dado": {
+    "limpezas": {
+      "duplicatas_removidas": 1,
+      "gasto_formato_br_corrigido": 1,
+      "cliques_link_negativos_corrigidos": 1
+    },
+    "linhas_incompletas": [
+      {
+        "campanha_id": "CAMP-004",
+        "data": "2026-06-03",
+        "campos_faltando": [
+          "compras",
+          "custo_por_compra",
+          "roas",
+          "valor_compras"
+        ]
+      }
+    ]
+  }
+}
