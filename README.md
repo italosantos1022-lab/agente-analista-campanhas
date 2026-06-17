@@ -202,6 +202,41 @@ descomente o bloco SMTP no workflow):
 > `.dockerignore` impede o `.env` de entrar na imagem; o workflow só referencia
 > Secrets, nunca valores literais.
 
+## Estimativa de custo
+
+O custo vem quase inteiramente de uma única chamada ao LLM por execução. A
+camada determinística (pandas) e a notificação não têm custo de API relevante.
+Como o LLM recebe apenas os resumos das anomalias (nunca as linhas cruas), o
+uso de tokens é baixo e previsível.
+
+**Modelo e preço:** Claude Sonnet 4.6, a US$ 3,00 por milhão de tokens de
+entrada e US$ 15,00 por milhão de tokens de saída (preço oficial da Anthropic).
+
+**Uso por execução** (estimado sobre a base fornecida, 6 campanhas e ~10
+anomalias):
+- Entrada (system prompt + anomalias resumidas): ~2.000 tokens
+- Saída (resumo, narrativas e diagnósticos em JSON): ~1.000 tokens
+
+**Custo por execução:** ~US$ 0,006 (entrada) + ~US$ 0,015 (saída) ≈ **US$ 0,02**.
+
+**Projeção (1 execução/dia):** ~US$ 0,02/dia, ~US$ 0,63/mês, ~US$ 7,70/ano.
+
+**Infraestrutura:** GitHub Actions (repositório público, sem custo), Resend (1
+email/dia, dentro do plano gratuito) e Telegram Bot API (gratuito). Custo de
+infra ≈ US$ 0 neste volume.
+
+**Total: menos de US$ 1 por mês.** Em modo degradado (LLM indisponível), não há
+chamada de API e o custo é zero.
+
+**Como escala:** o custo acompanha o número de campanhas e anomalias, não o
+número de linhas, porque o LLM só vê resumos. Para 200 clientes com volume
+parecido seriam ~200 chamadas/dia, na casa de US$ 4/dia antes de otimizar. Com
+prompt caching no system prompt (90% de desconto na parte repetida) e Batch API
+(50%), esse número cai bastante.
+
+> Os tokens acima são estimativa; o valor exato por execução pode ser lido no
+> campo `usage` da resposta da API.
+
 ## Limitações conhecidas
 
 Decisões conscientes de escopo. Para este teste optei pelo caminho simples; ao
