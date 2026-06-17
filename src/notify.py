@@ -104,7 +104,16 @@ class TelegramNotifier(Notifier):
         client = self._client or httpx.Client(timeout=15)
         try:
             resposta = client.post(url, json=payload)
-            resposta.raise_for_status()
+            # NÃO usar raise_for_status(): a mensagem do HTTPStatusError embute a
+            # URL — que contém o token — e essa string acaba em log/resultado.
+            # Levantamos um erro SANITIZADO (só o status), sem o token.
+            if resposta.is_error:
+                raise RuntimeError(f"Telegram respondeu HTTP {resposta.status_code}")
+        except httpx.HTTPError as exc:
+            # Erro de transporte (rede/timeout): sanitiza para não vazar a URL.
+            raise RuntimeError(
+                f"Telegram: falha de transporte ({type(exc).__name__})"
+            ) from None
         finally:
             if self._client is None:
                 client.close()

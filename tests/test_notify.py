@@ -61,8 +61,7 @@ def test_mensagem_telegram_tem_resumo_e_so_criticas():
 
 # --- Telegram com client fake (sem rede) ----------------------------------- #
 class _RespFake:
-    def raise_for_status(self):
-        return None
+    is_error = False
 
 
 class _HttpxOk:
@@ -72,6 +71,16 @@ class _HttpxOk:
     def post(self, url, json):
         self.posts.append((url, json))
         return _RespFake()
+
+
+class _RespErroHTTP:
+    is_error = True
+    status_code = 401
+
+
+class _HttpxErroHTTP:
+    def post(self, url, json):
+        return _RespErroHTTP()
 
 
 def test_telegram_posta_no_endpoint_certo():
@@ -89,6 +98,16 @@ def test_telegram_sem_credencial_levanta():
     s = _cfg(telegram_bot_token=None, telegram_chat_id=None)
     with pytest.raises(ValueError):
         TelegramNotifier(s).enviar(REL, HTML)
+
+
+def test_telegram_erro_http_nao_vaza_token():
+    # Em erro HTTP (ex.: 401), o token NÃO pode aparecer na exceção (que vira log).
+    s = _cfg(telegram_bot_token="TOKEN-SUPER-SECRETO", telegram_chat_id="C")
+    with pytest.raises(RuntimeError) as exc_info:
+        TelegramNotifier(s, client=_HttpxErroHTTP()).enviar(REL, HTML)
+    msg = str(exc_info.value)
+    assert "TOKEN-SUPER-SECRETO" not in msg
+    assert "401" in msg
 
 
 # --- Email com sender fake ------------------------------------------------- #

@@ -1,0 +1,69 @@
+name: Análise diária de campanhas
+
+on:
+  schedule:
+    # Diariamente às 11:00 UTC (08:00 no horário de Brasília, UTC-3).
+    # OBS.: cron do GitHub é sempre em UTC e só roda na branch padrão.
+    - cron: "0 11 * * *"
+  workflow_dispatch: {}        # permite disparo MANUAL pela aba "Actions"
+
+# Menor privilégio possível: o job só precisa ler o repositório.
+permissions:
+  contents: read
+
+jobs:
+  analise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LOG_LEVEL: INFO
+
+      # --- LLM ---
+      # Sem a chave, o pipeline roda em modo DEGRADADO (só a parte
+      # determinística) e ainda assim termina com sucesso.
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      # --- Telegram ---
+      # Liga via repository Variable (Settings > Variables). Default 'false' para
+      # NÃO falhar a execução agendada enquanto os Secrets não estiverem criados.
+      TELEGRAM_ENABLED: ${{ vars.TELEGRAM_ENABLED || 'false' }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      # --- Email (Resend) ---
+      EMAIL_ENABLED: ${{ vars.EMAIL_ENABLED || 'false' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      # Alternativa ao Resend: descomente e crie os Secrets SMTP_* (deixe
+      # RESEND_API_KEY vazio). O EmailNotifier usa Resend se a chave existir,
+      # senão cai no SMTP.
+      # SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      # SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      # SMTP_USER: ${{ secrets.SMTP_USER }}
+      # SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.21"
+          enable-cache: true
+
+      - name: Instalar dependências (lockfile, sem dev)
+        run: uv sync --frozen --no-dev
+
+      - name: Rodar pipeline ponta a ponta
+        run: uv run --frozen --no-dev python -m src.main
+
+      - name: Publicar relatório como artefato
+        if: always()        # sobe o relatório mesmo se a notificação falhar
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-campanhas
+          path: output/
+          if-no-files-found: warn
+          retention-days: 14

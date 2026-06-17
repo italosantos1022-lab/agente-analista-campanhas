@@ -1,0 +1,29 @@
+# Segredos NUNCA entram na imagem.
+.env
+.env.*
+
+# Ambiente virtual e saída gerada (recriados em runtime).
+.venv/
+output/
+
+# Git / CI / metadados.
+.git/
+.github/
+
+# Caches e artefatos Python.
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Testes e docs não são necessários no runtime do batch job.
+tests/
+*.md
+
+# Editores / OS.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
