@@ -21,6 +21,73 @@ CSV ─► Ingestão ─► Análise determinística ─► Camada LLM ─► Re
 Se o LLM falhar, o pipeline **não aborta**: gera um relatório degradado (só a
 parte determinística), com aviso claro, e notifica mesmo assim.
 
+## Decisões de arquitetura
+
+**Separação determinística / LLM.** É a decisão central. O LLM é bom em linguagem
+e síntese e ruim em aritmética, além de propenso a alucinar. Por isso toda conta
+é determinística e verificável, e o LLM só narra e prioriza. Isso traz três
+ganhos: controla custo (o LLM vê um punhado de anomalias já resumidas, nunca as
+linhas cruas), elimina o risco de um número inventado chegar ao cliente, e escala
+(o volume de chamadas ao LLM acompanha o número de campanhas, não o de linhas).
+
+**Camada LLM agnóstica de provedor.** O LLM vive atrás de um único módulo. Trocar
+de provedor mexe só nesse módulo, sem encostar na lógica de análise — algo
+comprovado na prática ao trocar de provedor durante o desenvolvimento. A
+inteligência está na camada determinística; o LLM é um componente fino e
+substituível.
+
+**Python e pandas.** O núcleo da tarefa é limpar dados tabulares sujos e calcular
+estatísticas por objetivo, terreno nativo do pandas. Isto é um *batch job* de
+dados, não uma aplicação web; um framework web seria a ferramenta errada.
+
+**Anomalia por objetivo.** Nem toda métrica importa para todo objetivo. Uma
+campanha de Reconhecimento é avaliada por frequência, alcance e CTR, não por
+ROAS; uma de Mensagens, por custo por conversa. As regras codificam essa
+diferença em vez de aplicar uma régua única.
+
+**Baseline relativo à própria campanha.** Cada anomalia é medida contra a média e
+a tendência da própria campanha na janela, não contra outras campanhas. Uma
+campanha de Black Friday com ROAS 9 é saudável no seu próprio patamar mesmo que
+outra rode a 15. Isso evita alarme falso por comparação cruzada.
+
+**Dois métodos de comparação, por natureza da métrica.** Métricas direcionais
+(ROAS) usam tendência (primeiro vs último dia); métricas de nível (custo por
+resultado) usam desvio em relação ao baseline. Cada métrica usa a comparação que
+faz sentido para ela.
+
+**Guardrails contra alucinação.** A saída do LLM é validada contra um schema
+(pydantic); resposta fora do schema é rejeitada e re-tentada. O LLM só pode citar
+anomalias que existem na camada determinística (qualquer outra é descartada) e só
+pode recomendar ações de um conjunto fechado. Uma auditoria varre o texto do LLM
+para garantir que nenhum número fabricado escapou. No relatório final, os números
+vêm do código e o texto do LLM é escapado antes de ser renderizado.
+
+**Notificação isolada por canal.** Cada canal envia de forma independente: se um
+falha, o outro ainda sai, e a falha fica logada. O formato se adapta ao canal
+(mensagem enxuta no Telegram, HTML completo no email).
+
+**Exit codes pensados para execução sem supervisão.** `0` para sucesso (inclusive
+LLM degradado e falha parcial de notificação); não-zero para erro fatal de
+pipeline e para falha total de notificação, para que um agendador saiba quando
+nenhum alerta chegou a ninguém.
+
+## Validação e dados sujos
+
+Dados reais raramente vêm limpos. A ingestão trata e **loga** cada caso:
+
+- Número em formato brasileiro (`"1.272,60"`) normalizado para float.
+- Clique negativo corrigido (impossível por definição; ver *Limitações*).
+- Linha duplicada removida.
+- Dia com dado de conversão faltando marcado como incompleto: excluído do cálculo
+  para não distorcer, e sinalizado na seção de qualidade do relatório.
+- `leads = 0` preservado como valor real (é sinal de anomalia, não dado faltando),
+  com proteção contra divisão por zero no custo por lead.
+- Campos vazios **esperados** por objetivo distinguidos de dados faltando, para
+  não gerar alarme falso (uma campanha de Reconhecimento não tem coluna de
+  compras).
+- CSV malformado (vazio, sem coluna obrigatória) falha com erro claro, não com
+  *stack trace* cru.
+
 ## Requisitos
 
 - Python 3.11+
@@ -130,3 +197,26 @@ descomente o bloco SMTP no workflow):
 > Segurança: nunca commite `.env` nem chaves. O `.gitignore` cobre `.env`; o
 > `.dockerignore` impede o `.env` de entrar na imagem; o workflow só referencia
 > Secrets, nunca valores literais.
+
+## Limitações conhecidas
+
+Decisões conscientes de escopo. Para este teste optei pelo caminho simples; ao
+lado de cada uma está o que faria em produção.
+
+- **Thresholds são percentuais fixos**, calibrados à mão para sair do ruído
+  diário. Funcionam nesta base, mas em produção usaria banda estatística
+  (desvios-padrão da média da própria campanha), que se adapta por campanha e
+  vertical sem ajuste manual.
+- **A correção de clique negativo usa valor absoluto.** Aqui é seguro porque o CPC
+  e o CTR do mesmo dia corroboram a magnitude. Em produção, o ideal seria flagar
+  para revisão em vez de corrigir cegamente, ou só corrigir quando um campo
+  vizinho confirma o valor.
+- **A entrada é um CSV fixo.** Num cenário real os dados viriam da API do Meta ou
+  de um export agendado, e a ingestão precisaria de paginação e tratamento de
+  janelas de data.
+- **Sem persistência histórica.** Cada execução é independente; o baseline é a
+  janela de 7 dias do próprio arquivo, sem memória entre dias nem consciência de
+  sazonalidade (fim de semana, datas comerciais).
+- **Uma única chamada ao LLM por execução.** Para muitos clientes simultâneos
+  seria preciso agregar por cliente e paralelizar. A arquitetura já favorece isso
+  (o LLM só vê resumos), mas a paralelização não está implementada.
