@@ -1,0 +1,27 @@
+# --- Segredos (NUNCA commitar) ---
+.env
+.env.*
+!.env.example
+
+# --- Saída gerada ---
+output/
+!output/.gitkeep
+*.log
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- uv / ambiente virtual ---
+.venv/
+# pyproject.toml e uv.lock SÃO versionados; o venv não.
+
+# --- OS / editores ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
